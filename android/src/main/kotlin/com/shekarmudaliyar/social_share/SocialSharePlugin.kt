@@ -69,16 +69,20 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             val backgroundImage: String? = call.argument("backgroundImage")
             val backgroundVideo: String? = call.argument("backgroundVideo")
 
-            val file =  File(activeContext!!.cacheDir,stickerImage)
-            val stickerImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", file)
-            val appId: String? = call.argument("appId")
-
             val intent = Intent(intentString)
+            
+            val appId: String? = call.argument("appId")
 
             intent.type = "image/*"
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            intent.putExtra("interactive_asset_uri", stickerImageFile)
+
+            if (stickerImage != null) {
+                val file =  File(activeContext!!.cacheDir,stickerImage)
+                val stickerImageFile = FileProvider.getUriForFile(activeContext!!, activeContext!!.applicationContext.packageName + ".com.shekarmudaliyar.social_share", file)
+                intent.putExtra("interactive_asset_uri", stickerImageFile)
+                activity!!.grantUriPermission(appName, stickerImageFile, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
 
             if (call.method == "shareFacebookStory") {
                 intent.putExtra("com.facebook.platform.extra.APPLICATION_ID", appId)
@@ -102,8 +106,7 @@ class SocialSharePlugin:FlutterPlugin, MethodCallHandler, ActivityAware {
             intent.putExtra("content_url", attributionURL)
             intent.putExtra("top_background_color", backgroundTopColor)
             intent.putExtra("bottom_background_color", backgroundBottomColor)
-            // Instantiate activity and verify it will resolve implicit intent
-            activity!!.grantUriPermission(appName, stickerImageFile, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            
             if (activity!!.packageManager.resolveActivity(intent, 0) != null) {
                 activeContext!!.startActivity(intent)
                 result.success("success")
